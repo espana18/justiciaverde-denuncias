@@ -243,5 +243,4 @@ Este proyecto es de código abierto para fines educativos y de impacto social.
 ## Contacto
 
 Para más información sobre el proyecto Justicia Verde, contacta a través de la plataforma.
-#   j u s t i c i a v e r d e - d e n u n c i a s  
- 
+#
