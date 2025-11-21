@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import type { TipoDemanda } from "@/lib/tipos"
 import { obtenerUsuarioActual } from "@/lib/auth"
 import { toast } from "sonner"
+import { Copy, Check } from 'lucide-react'
 
 // Importar selector de mapa dinámicamente
 const SelectorUbicacionMapa = dynamic(() => import("./selector-ubicacion-mapa"), {
@@ -21,6 +22,8 @@ export default function FormularioDenuncia() {
   const router = useRouter()
   const [tiposDemanda, setTiposDemanda] = useState<TipoDemanda[]>([])
   const [enviando, setEnviando] = useState(false)
+  const [numeroRadicadoGenerado, setNumeroRadicadoGenerado] = useState<string | null>(null)
+  const [copiado, setCopiado] = useState(false)
 
   // Datos del formulario
   const [tipoDemandaId, setTipoDemandaId] = useState("")
@@ -31,6 +34,14 @@ export default function FormularioDenuncia() {
   const [ubicacionTexto, setUbicacionTexto] = useState("")
   const [coordenadas, setCoordenadas] = useState<{ lat: number; lng: number } | null>(null)
   const [archivos, setArchivos] = useState<File[]>([])
+
+  // Sincronizar ubicacionTexto con coordenadas en tiempo real (para clics en mapa y GPS)
+  useEffect(() => {
+    if (coordenadas) {
+      const { lat, lng } = coordenadas
+      setUbicacionTexto(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+    }
+  }, [coordenadas])
 
   // Cargar tipos de demanda
   useEffect(() => {
@@ -58,9 +69,6 @@ export default function FormularioDenuncia() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setCoordenadas({ lat: position.coords.latitude, lng: position.coords.longitude });
-          setUbicacionTexto(
-            `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`
-          );
           toast.success('Ubicación detectada correctamente');
         },
       );
@@ -76,15 +84,19 @@ export default function FormularioDenuncia() {
     }
   }
 
+  const copiarRadicado = () => {
+    if (numeroRadicadoGenerado) {
+      navigator.clipboard.writeText(numeroRadicadoGenerado)
+      setCopiado(true)
+      toast.success("Número de radicado copiado")
+      setTimeout(() => setCopiado(false), 2000)
+    }
+  }
+
   // Enviar formulario
   const manejarEnvio = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // // ✅ Validación: todos menos evidencias
-    // if (!titulo.trim() || !descripcion.trim() || !tipoDemandaId || !ubicacionTexto.trim()) {
-    //   toast.error('Por favor completa todos los campos obligatorios');
-    //   return;
-    // }
     if (!coordenadas) {
       toast.error('Selecciona una ubicación en el mapa');
       return;
@@ -100,7 +112,7 @@ export default function FormularioDenuncia() {
       }));
 
       const datos = {
-        ciudadano_id: anonima ? null : usuario?.id || null,
+        // ciudadano_id: anonima ? null : usuario?.id || null,
         titulo,
         descripcion,
         tipo_demanda_id: Number.parseInt(tipoDemandaId),
@@ -112,6 +124,9 @@ export default function FormularioDenuncia() {
         fotos: fotosData,
       };
 
+      console.log('Payload enviado en creación:', datos)
+      console.log('anonima en estado:', anonima)  // Debug: Debería ser true si activaste el toggle
+
       const res = await fetch('/api/denuncias', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -119,8 +134,9 @@ export default function FormularioDenuncia() {
       });
 
       if (res.ok) {
-        toast.success('Denuncia creada exitosamente');
-        router.push('/ciudadano/panel');
+        const resultado = await res.json()
+        setNumeroRadicadoGenerado(resultado.numero_radicado)
+        toast.success('¡Denuncia creada exitosamente!');
       } else {
         const error = await res.json();
         toast.error(`Error: ${error.error}`);
@@ -132,6 +148,49 @@ export default function FormularioDenuncia() {
       setEnviando(false);
     }
   };
+
+  if (numeroRadicadoGenerado) {
+    return (
+      <div className="max-w-2xl mx-auto text-center space-y-6 py-12">
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+          <Check className="w-10 h-10 text-green-600" />
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900">¡Denuncia creada exitosamente!</h2>
+        <p className="text-gray-600">Tu denuncia ha sido registrada correctamente. Guarda este número de radicado para consultar el estado:</p>
+
+        <div className="bg-[#0d7c66]/10 border-2 border-[#0d7c66] rounded-lg p-6">
+          <p className="text-sm text-gray-600 mb-2">Número de radicado:</p>
+          <div className="flex items-center justify-center gap-3">
+            <p className="text-2xl font-mono font-bold text-[#0d7c66]">{numeroRadicadoGenerado}</p>
+            <button
+              onClick={copiarRadicado}
+              className="p-2 hover:bg-[#0d7c66]/20 rounded-lg transition-colors"
+              title="Copiar"
+            >
+              {copiado ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5 text-[#0d7c66]" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+          <p className="text-sm text-blue-900 font-semibold mb-2">💡 Información importante:</p>
+          <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+            <li>Guarda este número para consultar el estado de tu denuncia</li>
+            <li>Puedes consultarlo desde la página principal sin iniciar sesión</li>
+          </ul>
+        </div>
+
+        <div className="flex gap-4 justify-center pt-4">
+          <button
+            onClick={() => router.push('/ciudadano/panel')}
+            className="bg-[#0d7c66] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0a5f4f] transition-colors"
+          >
+            Ir a mi panel
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <form onSubmit={manejarEnvio} className="space-y-6">
@@ -237,8 +296,8 @@ export default function FormularioDenuncia() {
           <input
             type="text"
             id="ubicacion"
-            // value={ubicacionTexto}
-            // onChange={(e) => setUbicacionTexto(e.target.value)}
+            value={ubicacionTexto}
+            onChange={(e) => setUbicacionTexto(e.target.value)}
             placeholder="Ej: Parque Central Bogotá"
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0d7c66] focus:border-transparent"
           />
@@ -250,32 +309,35 @@ export default function FormularioDenuncia() {
             📍 Mi ubicación
           </button>
         </div>
-
+        <p className="text-sm text-gray-500 mt-1">Con el botón de Mi ubicación, este tomará tu ubicación actual, además puedes manipular el mapa y señalar manualmente la ubicación. El campo se actualizará automáticamente con las coordenadas.</p>
         {/* Mapa para seleccionar ubicación */}
-        <div className="h-96 rounded-lg overflow-hidden border border-gray-300">
+        <div className="h-96 rounded-lg overflow-hidden border border-gray-300 mt-8">
           <SelectorUbicacionMapa coordenadas={coordenadas} onCambiarCoordenadas={setCoordenadas} />
         </div>
       </div>
 
-      {/* Anonimato */}
-      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-        <label htmlFor="anonima" className="flex items-center gap-3 cursor-pointer flex-1">
-          <div className="relative">
-            <input
-              type="checkbox"
-              id="anonima"
-              checked={anonima}
-              onChange={(e) => setAnonima(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-[#0d7c66] transition-colors"></div>
-            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-          </div>
-          <div className="flex-1">
-            <span className="font-semibold">Denuncia anónima</span>
-            <p className="text-sm text-gray-600">Si se activa. Tu identidad no será revelada en esta denuncia.</p>
-          </div>
-        </label>
+      {/* Toggle anónimo */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div>
+          <p className="font-medium">Denuncia anónima</p>
+          <p className="text-sm text-gray-600">
+            Si está desactivado mostrará info de sus datos con los que se registró
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setAnonima(!anonima)
+            console.log('Toggle anónimo cambiado a:', !anonima)  // ← Debug temporal: Remuévelo después
+          }}
+          className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${anonima ? "bg-[#0d7c66]" : "bg-gray-300"
+            }`}
+        >
+          <span
+            className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${anonima ? "translate-x-7" : "translate-x-1"
+              }`}
+          />
+        </button>
       </div>
 
       {/* Botones */}

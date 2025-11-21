@@ -117,8 +117,53 @@ INSERT IGNORE INTO usuario (id, rol_id, nombre_completo, correo, telefono, contr
 VALUES (1, 1, 'Admin Justicia Verde', 'admin@gmail.com', '0000000000', 'admin123');
 
 INSERT IGNORE INTO usuario (id, rol_id, nombre_completo, correo, telefono, contrasena)
-VALUES (2, 2, 'Ciudadano Prueba', 'ciudadano@gmail.com', '3000000000', 'ciudadano123');
+VALUES (2, 2, 'Ciudadano Prueba', 'ciudadano@gmail.com', '11111111111', 'ciudadano123');
 
 INSERT IGNORE INTO usuario (id, rol_id, nombre_completo, correo, telefono, contrasena)
-VALUES (3, 3, 'ONG Revisor', 'revisor@gmail.com', '3100000000', 'revisor123');
+VALUES (3, 3, 'ONG Revisor', 'revisor@gmail.com', '2222222222', 'revisor123');
 
+select * from tipo_demanda;
+select * from usuario;
+select * from rol;
+select * from demanda;
+
+-- Agregar el campo numero_radicado a la tabla demanda
+-- ALTER TABLE demanda 
+-- ADD COLUMN numero_radicado VARCHAR(20) UNIQUE NOT NULL AFTER id;
+
+-- ----------------------
+
+-- Hacer ciudadano_id nullable (permite NULL sin romper datos existentes)
+-- ALTER TABLE demanda 
+-- MODIFY COLUMN ciudadano_id INT NULL;  -- Asume INT; si es BIGINT, cámbialo
+
+-- Opcional: Actualiza la FK para permitir NULL (si no lo hace automáticamente)
+-- ALTER TABLE demanda 
+-- DROP FOREIGN KEY fk_demanda_ciudadano;
+
+-- ALTER TABLE demanda 
+-- ADD CONSTRAINT fk_demanda_ciudadano 
+-- FOREIGN KEY (ciudadano_id) REFERENCES usuario(id) ON DELETE SET NULL;  -- SET NULL si se borra usuario
+
+-- Verifica el esquema
+-- DESCRIBE demanda;
+-- SHOW CREATE TABLE demanda;  -- Para ver la FK actualizada
+
+-- SHOW CREATE TABLE demanda;
+-- O más específico:
+-- SELECT CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME 
+-- FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+-- WHERE TABLE_NAME = 'demanda' AND REFERENCED_TABLE_NAME = 'usuario';
+
+-- SHOW CREATE TABLE demanda;
+
+-- comandos migracion
+
+-- ALTER TABLE demanda 
+-- MODIFY COLUMN ciudadano_id INT UNSIGNED NULL;
+
+-- DESCRIBE demanda;  -- Debería mostrar `ciudadano_id` como `INT UNSIGNED NULL`
+-- SHOW CREATE TABLE demanda;  -- Confirma el cambio
+
+-- ALTER TABLE demanda 
+-- MODIFY COLUMN ciudadano_id INT UNSIGNED NOT NULL;

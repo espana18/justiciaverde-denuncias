@@ -24,6 +24,7 @@ export interface TipoDemanda {
 
 export interface Demanda {
   id: number;
+  numero_radicado?: string; // Agregando campo numero_radicado
   ciudadano_id: number;
   titulo: string;
   descripcion: string;
@@ -39,7 +40,7 @@ export interface Demanda {
   creado_en: string;
   actualizado_en: string | null;
   ciudadano_nombre?: string;
-  ciudadano_correo?: string;
+  ciudadano_correo: string;
   ciudadano_telefono?: string;
   fotos?: DemandaFoto[];
   revisores?: (Usuario & { asignado_en?: string })[];

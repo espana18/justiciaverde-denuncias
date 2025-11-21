@@ -4,6 +4,7 @@ import TarjetaDenuncia from "@/componentes/tarjeta-denuncia";
 import type { Demanda } from "@/lib/tipos";
 import MapaClient from "@/componentes/mapa-client";
 import ScrollToMapButton from "@/componentes/scroll-to-map-button";
+import ConsultorRadicado from "@/componentes/consultor-radicado";
 
 // Función server: obtiene denuncias destacadas
 async function obtenerDenunciasDestacadas(): Promise<Demanda[]> {
@@ -56,14 +57,23 @@ export default async function PaginaPrincipal() {
             {/* Botón cliente que hace scroll */}
             <ScrollToMapButton />
 
-            <div className="bg-white text-[#0d7c66] px-6 py-3 rounded-full font-semibold hover:bg-green-50 transition-colors inline-flex items-center gap-2 shadow-md cursor-pointer">
+            <Link
+              href="/guia-crear-demanda"
+              className="bg-white text-[#0d7c66] px-6 py-3 rounded-full font-semibold hover:bg-green-50 transition-colors inline-flex items-center gap-2 shadow-md"
+            >
               <span>📘</span>
               Cómo crear una demanda
-            </div>
+            </Link>
           </div>
         </div>
       </section>
 
+      {/* Consultor de Radicado */}
+      <section className="py-8 bg-gradient-to-b from-white to-[#f8faf9]">
+        <div className="container mx-auto px-4">
+          <ConsultorRadicado />
+        </div>
+      </section>
 
       {/* Denuncias Recientes */}
       <section className="py-16">

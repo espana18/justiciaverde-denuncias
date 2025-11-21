@@ -1,16 +1,16 @@
-import type { PrioridadDemanda } from "./tipos"
+import type { PrioridadDemanda } from "./tipos";
 
 // Función para obtener el color según la prioridad
 export function obtenerColorPrioridad(prioridad: PrioridadDemanda): string {
   switch (prioridad) {
     case "critica":
-      return "bg-red-100 text-red-800 border-red-200"
+      return "bg-red-100 text-red-800 border-red-200";
     case "alta":
-      return "bg-orange-100 text-orange-800 border-orange-200"
+      return "bg-orange-100 text-orange-800 border-orange-200";
     case "medio":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
     default:
-      return "bg-gray-100 text-gray-800 border-gray-200"
+      return "bg-gray-100 text-gray-800 border-gray-200";
   }
 }
 
@@ -18,32 +18,52 @@ export function obtenerColorPrioridad(prioridad: PrioridadDemanda): string {
 export function obtenerTextoPrioridad(prioridad: PrioridadDemanda): string {
   switch (prioridad) {
     case "critica":
-      return "CRÍTICA"
+      return "CRÍTICA";
     case "alta":
-      return "Alta"
+      return "Alta";
     case "medio":
-      return "Media"
+      return "Media";
     default:
-      return prioridad
+      return prioridad;
   }
 }
 
 // Función para formatear fecha
 export function formatearFecha(fecha: string): string {
-  const date = new Date(fecha)
+  const date = new Date(fecha);
   return date.toLocaleDateString("es-CO", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  })
+  });
 }
 
 // Función para formatear fecha corta
 export function formatearFechaCorta(fecha: string): string {
-  const date = new Date(fecha)
+  const date = new Date(fecha);
   return date.toLocaleDateString("es-CO", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  })
+  });
+}
+
+// Función para formatear fecha larga
+export function formatearFechaLarga(fecha: string): string {
+  const date = new Date(fecha);
+  return date.toLocaleDateString("es-CO", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Función para generar número de radicado único
+export function generarNumeroRadicado(id: number): string {
+  const año = new Date().getFullYear();
+  const numeroFormateado = id.toString().padStart(6, "0");
+  return `RAD-${año}-${numeroFormateado}`;
 }

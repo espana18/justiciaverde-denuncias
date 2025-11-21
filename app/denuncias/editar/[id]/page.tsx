@@ -56,6 +56,12 @@ export default function EditarDenunciaPage({ params }: { params: Promise<{ id: s
                     setAnonima(data.anonima)
                     if (data.latitud && data.longitud) {
                         setCoordenadas({ lat: data.latitud, lng: data.longitud })
+                    } else if (data.ubicacion_texto) {
+                        // ← NUEVO: Parsear coordenadas desde texto si existe (formato "lat, lng")
+                        const match = data.ubicacion_texto.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/)
+                        if (match) {
+                            setCoordenadas({ lat: parseFloat(match[1]), lng: parseFloat(match[2]) })
+                        }
                     }
                 } else {
                     alert("No se pudo cargar la denuncia")
@@ -70,6 +76,15 @@ export default function EditarDenunciaPage({ params }: { params: Promise<{ id: s
         }
         cargarDatos()
     }, [resolvedParams.id, router])
+
+    // Sincronizar ubicacionTexto con coordenadas en tiempo real (para clics en mapa y GPS) ← Movido después de carga
+    useEffect(() => {
+        if (coordenadas) {
+            const { lat, lng } = coordenadas
+            setUbicacionTexto(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+            console.log('Coordenadas sincronizadas en editar:', coordenadas)  // ← Debug temporal: Remuévelo después
+        }
+    }, [coordenadas])
 
     // Detectar cambios
     useEffect(() => {
@@ -97,7 +112,6 @@ export default function EditarDenunciaPage({ params }: { params: Promise<{ id: s
                         lat: position.coords.latitude,
                         lng: position.coords.longitude,
                     })
-                    setUbicacionTexto(`${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`)
                 },
                 (error) => {
                     console.error("[v0] Error al obtener ubicación:", error)
@@ -239,7 +253,7 @@ export default function EditarDenunciaPage({ params }: { params: Promise<{ id: s
                         {/* Ubicación */}
                         <div>
                             <label htmlFor="ubicacion" className="block text-sm font-semibold mb-2">
-                                Ubicación
+                                Ubicación <span className="text-red-500">*</span>
                             </label>
                             <div className="flex gap-2 mb-3">
                                 <input
@@ -258,32 +272,38 @@ export default function EditarDenunciaPage({ params }: { params: Promise<{ id: s
                                     📍 Mi ubicación
                                 </button>
                             </div>
-
-                            {/* Toggle anónimo */}
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div>
-                                    <p className="font-medium">Denuncia anónima</p>
-                                    <p className="text-sm text-gray-600">
-                                        Si está desactivado mostrará info de sus datos con los que se registró
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setAnonima(!anonima)}
-                                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${anonima ? "bg-[#0d7c66]" : "bg-gray-300"
-                                        }`}
-                                >
-                                    <span
-                                        className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${anonima ? "translate-x-7" : "translate-x-1"
-                                            }`}
-                                    />
-                                </button>
-                            </div>
-
+                            <p className="text-sm text-gray-500 mt-1">Puedes manipular el mapa y señalar manualmente la ubicación. El campo se actualizará automáticamente con las coordenadas.</p>
                             {/* Mapa */}
-                            <div className="h-96 rounded-lg overflow-hidden border border-gray-300">
-                                <SelectorUbicacionMapa coordenadas={coordenadas} onCambiarCoordenadas={setCoordenadas} />
+                            <div className="h-96 rounded-lg overflow-hidden border border-gray-300 mt-4">
+                                <SelectorUbicacionMapa
+                                    coordenadas={coordenadas}
+                                    onCambiarCoordenadas={(newCoords) => {
+                                        setCoordenadas(newCoords)
+                                        console.log('Coordenadas desde mapa en editar:', newCoords)  // ← Debug temporal
+                                    }}
+                                />
                             </div>
+                        </div>
+
+                        {/* Toggle anónimo */}
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <p className="font-medium">Denuncia anónima</p>
+                                <p className="text-sm text-gray-600">
+                                    Si está desactivado mostrará info de sus datos con los que se registró
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setAnonima(!anonima)}
+                                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${anonima ? "bg-[#0d7c66]" : "bg-gray-300"
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${anonima ? "translate-x-7" : "translate-x-1"
+                                        }`}
+                                />
+                            </button>
                         </div>
 
                         {/* Botones */}

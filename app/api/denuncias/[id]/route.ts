@@ -14,7 +14,9 @@ export async function GET(
       `SELECT 
         d.*,
         td.nombre as tipo_demanda_nombre,
-        u.nombre_completo as ciudadano_nombre
+        u.nombre_completo as ciudadano_nombre,
+        u.correo as ciudadano_correo,
+        u.telefono as ciudadano_telefono
        FROM demanda d
        INNER JOIN tipo_demanda td ON d.tipo_demanda_id = td.id
        LEFT JOIN usuario u ON d.ciudadano_id = u.id
@@ -38,9 +40,8 @@ export async function GET(
     );
     denuncia.fotos = fotos;
 
-    // Obtener revisores asignados
     const [revisores] = await pool.query<RowDataPacket[]>(
-      `SELECT u.id, u.nombre_completo, u.correo, dr.asignado_en
+      `SELECT u.id, u.nombre_completo, u.correo, u.telefono, dr.asignado_en
        FROM demanda_revisor dr
        INNER JOIN usuario u ON dr.revisor_id = u.id
        WHERE dr.demanda_id = ?`,
@@ -75,6 +76,7 @@ export async function PUT(
       ubicacion_texto,
       latitud,
       longitud,
+      anonima, // Agregar campo anonima
     } = body;
 
     const updates: string[] = [];
@@ -111,6 +113,10 @@ export async function PUT(
     if (longitud !== undefined) {
       updates.push("longitud = ?");
       values.push(longitud);
+    }
+    if (anonima !== undefined) {
+      updates.push("anonima = ?");
+      values.push(anonima ? 1 : 0);
     }
 
     if (updates.length === 0) {

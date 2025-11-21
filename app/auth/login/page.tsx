@@ -21,11 +21,12 @@ export default function PaginaLogin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo, contrasena }),
+        credentials: "include", // ← Importante para cookies
       })
 
       if (res.ok) {
         const data = await res.json()
-        guardarSesion(data.usuario)
+        guardarSesion(data.usuario); // setear sesión en localStorage
         alert(`Bienvenido ${data.usuario.nombre_completo}`)
 
         // Redirigir según el rol

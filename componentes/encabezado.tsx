@@ -26,15 +26,15 @@ export default function Encabezado() {
     <header className="bg-[#0d7c66] text-white shadow-md">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-              <span className="text-[#0d7c66] text-xl">🌿</span>
+              <img src="/favicon.ico" alt="Logo" className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-2xl font-bold">JUSTICIA VERDE</h1>
               <p className="text-xl text-green-100">Denuncias ambientales</p>
             </div>
-          </Link>
+          </div>
 
           <nav className="flex items-center gap-6">
             {/* <Link href="/" className="hover:text-green-200 transition-colors">
